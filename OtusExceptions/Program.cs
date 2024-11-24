@@ -15,16 +15,30 @@ namespace OtusExceptions
 			Console.WriteLine("a * x^2 + b * x + c = 0");
 			while (true)
 			{
+				Dictionary<string, string> invalidInputs = new Dictionary<string, string>();
 				try {
-					var ex = new Exception(_parseEx);
+					Console.WriteLine($"Введите значение A");
+					var reply = Console.ReadLine();
+					if(!TryReadValue(reply, out a)) invalidInputs.Add("a", reply);
 
-					ReadValue("a", out a, ex);
-					ReadValue("b", out b, ex);
-					ReadValue("c", out c, ex);
+					Console.WriteLine($"Введите значение B");
+					reply = Console.ReadLine();
+					if(!TryReadValue(reply, out b)) invalidInputs.Add("b", reply);
 
-					if (ex.Data.Count > 0) throw ex;
-					else break;
+					Console.WriteLine($"Введите значение C");
+					reply= Console.ReadLine();
+					if(!TryReadValue(reply, out c)) invalidInputs.Add("c", reply);
+
+					if (invalidInputs.Count == 0) break;
+					else
+					{
+						var ex = new Exception();
+						foreach (var input in invalidInputs ) { ex.Data.Add(input.Key, input.Value); }
+						throw ex;
+					}
 				}
+				catch (ArgumentNullException) { }
+				catch (FormatException) { }
 				catch (Exception ex)
 				{
 					FormatData(ex.Message, Severity.Error, ex.Data);
@@ -34,23 +48,26 @@ namespace OtusExceptions
 			{
 				CalculateQuadraticEquation(a, b, c);
 			}
-			catch (Exception ex)
+			catch (NoRootsException ex)
 			{
 				FormatData(ex.Message, Severity.Warning, ex.Data);
 			}
+			catch (Exception ex)
+			{
+				Console.WriteLine(ex.Message);
+			}
 		}
-		private static void ReadValue(string paramName, out int param, Exception exception)
+		private static bool TryReadValue(string input, out int param)
 		{
-			Console.WriteLine($"Введите значение {paramName}");
-			var reply = Console.ReadLine();
-			if (!int.TryParse(reply, out param)) exception.Data.Add(paramName, reply);
+			param = int.Parse(input);
+			return true;
 		}
 		private static void CalculateQuadraticEquation(int a, int b, int c)
 		{
 			var discriminant = (b*b) - (4 * a * c);
 			if (discriminant < 0)
 			{
-				throw new Exception(_noRootsEx);
+				throw new NoRootsException(_noRootsEx);
 			}
 			else if (discriminant == 0)
 			{
